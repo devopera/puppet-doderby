@@ -57,14 +57,27 @@ define doderby::base (
       before => [Exec["doderby-base-create-${title}"]],
     }
   }
+  # check that app dir exists
+  if ! defined(File["${target_dir}/${app_name}"]) {
+    docommon::stickydir { "${target_dir}/${app_name}":
+      user => $user,
+      group => $group,
+      context => 'httpd_sys_content_t',
+      before => [Exec["doderby-base-create-${title}"]],
+    }
+  }
 
   # create and inflate node/express example
   exec { "doderby-base-create-${title}" :
     path => '/bin:/usr/bin:/sbin:/usr/sbin',
-    command => "derby new ${target_dir}/${app_name} && cd ${target_dir}/${app_name} && npm install",
+    # old-syntax, now deprecated
+    # command => "derby new ${target_dir}/${app_name} && cd ${target_dir}/${app_name} && npm install",
+    command => "bash -c \"cd ${target_dir}/${app_name} && yo --insight derby\"",
     user => $user,
     group => $group,
     cwd => "/home/${user}",
+    # @todo add creates
+    # creates => "${target_dir}/${app_name}/something",
   }
 
   # create service and start on machine startup
